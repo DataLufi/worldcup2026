@@ -1,182 +1,98 @@
-# 🏆 WorldCup2026 — Previsão de Resultados em Tempo Real
+# 🏆 Copa do Mundo 2026 — Sistema de Previsão de Resultados
 
-> Pipeline preditivo para a Copa do Mundo FIFA 2026
-> `Python` · `Streamlit` · `GitHub Actions` · `scikit-learn`
-
----
-
-## O Problema
-
-A Copa do Mundo FIFA 2026 começa em junho.
-48 seleções. 104 jogos. Centenas de variáveis.
-
-Modelos de previsão existem — mas a maioria para no resultado da fase de grupos.
-Este não.
-
-**O WorldCup2026 acompanha a Copa do início ao fim — e se atualiza sozinho.**
+> ⚠️ **Este repositório está arquivado.** Veja o contexto completo abaixo.
 
 ---
 
-## A Pergunta Central
+## Status: Arquivado — Maio/2026
 
-> **Quem vai ganhar — e o que os dados dizem sobre isso?**
+Este projeto foi desenvolvido para aproveitar a janela da Copa do Mundo 2026 com um pipeline completo de dados para previsão de resultados — coleta de dados, modelo preditivo e dashboard interativo ao vivo.
 
----
+Durante o desenvolvimento, múltiplos problemas com as APIs de dados de futebol (instabilidade de autenticação, rate limits restritivos, dados incompletos no período pré-Copa) tornaram o pipeline dependente de scraping frágil e fallbacks manuais, incompatíveis com o cronograma disponível antes de 11 de junho.
 
-## Como Funciona
+A decisão foi consolidar os objetivos técnicos deste projeto — **Streamlit público**, **GitHub Actions** e **dado dinâmico** — no projeto **Prisma**, que já tinha essas camadas planejadas e em desenvolvimento ativo, com narrativa de negócio mais robusta e sem dependência de API externa instável.
 
-O pipeline combina três camadas de inteligência:
-
-**Camada 1 — Força das Seleções**
-Índice de força calculado a partir de quatro componentes ponderados:
-
-| Componente | Peso | Fonte |
-|---|---|---|
-| Ranking FIFA | 50% | API oficial FIFA |
-| Desempenho nas Eliminatórias | 30% | football-data.org |
-| Histórico em Copas | 10% | Dataset histórico |
-| Fator sede | 10% | EUA · México · Canadá |
-
-**Camada 2 — Modelo Preditivo**
-Distribuição de Poisson para gols esperados por confronto + Simulação Monte Carlo para propagação do torneio. Validado contra os resultados reais da Copa 2022.
-
-**Camada 3 — Atualização Automática**
-GitHub Actions executa o pipeline diariamente durante a Copa. Resultados reais alimentam o modelo. Probabilidades se atualizam a cada rodada — sem intervenção manual.
+Repositório mantido como registro de decisão estratégica e de todo o trabalho desenvolvido até o ponto de pivô.
 
 ---
 
-## O Pipeline
+## O que foi construído antes do arquivamento
 
-```
-[COLETA]
-Python → API-Football + football-data.org + ranking FIFA
-Dados de 48 seleções · eliminatórias · histórico
+A Fase 1 foi **completamente concluída** e a Fase 2 **implementada e validada**:
 
-        ↓
+### ✅ Fase 1 — Coleta e Processamento Base
+- Pipeline de coleta do Ranking FIFA com scraping + fallback para football-data.org + fallback interno com dados reais de abril/2026
+- Dataset completo das **48 seleções classificadas** — lista final pós-repescagem (31/03/2026), incluindo UEFA (16), CONMEBOL (6), CONCACAF (6), CAF (10), AFC (9) e OFC (1)
+- **12 grupos oficiais** mapeados com o sorteio FIFA de dezembro/2025
+- Índice de força (0–100) calculado para cada seleção com ponderação: Ranking FIFA (50%), Dificuldade das eliminatórias (30%), Histórico Copa 2022 (10%), Fator sede (10%)
+- Notebook didático `fase1_coleta_base.ipynb` com análise exploratória e gráficos interativos
 
-[PROCESSAMENTO]
-Índice de força (0–100) por seleção
-Pesos: Ranking FIFA 50% · Eliminatórias 30% · Histórico 10% · Sede 10%
+### ✅ Fase 2 — Modelo Preditivo
+- Modelo baseado em **distribuição de Poisson** (Dixon & Coles, 1997) — referência acadêmica clássica para previsão de resultados de futebol
+- Previsão de **probabilidade de vitória/empate/derrota** e **placar mais provável** para cada confronto
+- **Top 5 placares** com respectivas probabilidades por jogo
+- **Simulação Monte Carlo** (5.000–10.000 iterações) para estimar probabilidade de classificação por grupo
+- Validação retroativa contra resultados reais da Copa 2022 — acurácia de **52–58%** (referência de mercado para modelos de Poisson: 50–60%)
+- Notebook didático `fase2_modelo_preditivo.ipynb` com visualizações interativas
 
-        ↓
-
-[MODELO PREDITIVO]
-Distribuição de Poisson → gols esperados por confronto
-Simulação Monte Carlo → probabilidade de classificação por fase
-
-        ↓
-
-[ATUALIZAÇÃO AO VIVO]
-GitHub Actions → execução diária durante a Copa
-Resultados reais alimentam o modelo
-Probabilidades recalculadas a cada rodada
-
-        ↓
-
-[DASHBOARD]
-Streamlit Cloud → público · interativo · atualizado automaticamente
-```
+### ✅ Gestão do Projeto
+- **GitHub Projects** estruturado com 6 milestones, 31 issues e roadmap visual completo
+- Issues #1 a #5 (Fase 1) **fechadas com entrega**
+- Decisões arquiteturais documentadas (ver seção abaixo)
 
 ---
 
-## Dashboard
+## Decisões Técnicas Documentadas
 
-O dashboard está publicado no Streamlit Cloud e acessível por qualquer pessoa via link.
+Este projeto serviu também como exercício de decisão arquitetural. As escolhas abaixo foram deliberadas e documentadas:
 
-**Páginas:**
+**Streamlit vs Power BI**
+Dashboard precisava ser acessível via link público, sem licença, com dados em tempo real durante a Copa. Streamlit Cloud atende todos esses requisitos gratuitamente.
 
-| Página | Conteúdo |
-|---|---|
-| Visão Geral | Probabilidades de título por seleção |
-| Grupos | Previsões e classificação esperada por grupo |
-| Confrontos | Probabilidades jogo a jogo com placar provável |
-| Simulação do Torneio | Monte Carlo — quem chega onde |
-| Metodologia | Como o modelo funciona e como interpretar os resultados |
+**GitHub Actions vs servidor dedicado**
+Automação de coleta de dados implementada como cron job no GitHub Actions — sem custo de servidor, com histórico de execuções visível no repositório como evidência do pipeline em funcionamento.
 
-> 🔗 Link do dashboard: *disponível após publicação*
+**API-Sports direto vs RapidAPI**
+Cadastro direto em `dashboard.api-sports.io` (header: `x-apisports-key`) — mais estável e sem intermediário. RapidAPI apresentou instabilidade durante o desenvolvimento.
 
----
+**Sem scraping de notícias + NLP para escalações**
+Avaliado e descartado em favor da API-Sports: dados estruturados entregues diretamente pela fonte, sem risco de quebra por mudança de HTML. Durante a Copa, com jogos diários, um scraper frágil comprometeria a estabilidade do pipeline. Documentado como evolução futura.
 
-## Estrutura do Projeto
-
-```
-worldcup2026/
-├── collectors/              ← coleta de dados via API
-│   ├── ranking_fifa.py
-│   ├── selecoes_copa.py
-│   └── resultados_ao_vivo.py
-├── processors/              ← cálculo de pesos e índice de força
-│   └── calcular_pesos.py
-├── models/                  ← modelo preditivo
-│   └── modelo_preditivo.py
-├── dashboard/               ← Streamlit
-│   └── app.py
-├── notebooks/               ← metodologia e validação
-│   ├── 01_metodologia.ipynb
-│   └── 02_validacao_copa2022.ipynb
-├── data/
-│   ├── raw/                 ← dados coletados
-│   └── processed/           ← datasets tratados
-└── .github/workflows/
-    └── atualizacao_diaria.yml
-```
+**Ranking FIFA vs resultado da Copa anterior**
+A Copa 2026 tem 48 seleções (vs. 32 em 2022), tornando a comparação direta de colocações inválida. O Ranking FIFA já pondera força de adversários e resultados recentes — é a métrica mais robusta disponível.
 
 ---
 
-## Stack
+## Por que arquivar e não deletar
 
-![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
-![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=streamlit&logoColor=white)
-![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat&logo=githubactions&logoColor=white)
-![Pandas](https://img.shields.io/badge/Pandas-150458?style=flat&logo=pandas&logoColor=white)
-![NumPy](https://img.shields.io/badge/NumPy-013243?style=flat&logo=numpy&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat&logo=scikit-learn&logoColor=white)
+Deletar seria esconder. Arquivar é documentar.
 
----
+Este repositório representa:
+- Decisão estratégica tomada com base em dados (cronograma vs. dependência técnica instável), não em ego
+- Gestão de risco real: identificar que um componente do pipeline compromete a entrega e redirecionar o esforço
+- Evidência de raciocínio por escrito — habilidade valorizada em times de dados
 
-## Status do Projeto
-
-| Milestone | Prazo | Status |
-|---|---|---|
-| 1 — Fundação e Coleta de Dados | 15/Mai/2026 | 🔄 Em andamento |
-| 2 — Modelo Preditivo | 22/Mai/2026 | ⏳ Aguardando M1 |
-| 3 — Dashboard Streamlit | 31/Mai/2026 | ⏳ Aguardando M2 |
-| 4 — Automação e Atualização ao Vivo | 11/Jun/2026 | ⏳ Aguardando M3 |
-| 5 — Documentação e Publicação | 05/Jun/2026 | ⏳ Paralelo ao M3 |
-| 6 — Acompanhamento ao Vivo | 19/Jul/2026 | ⏳ Durante a Copa |
+O código existente demonstra estrutura de projeto Python, tentativa de integração com API externa, modelagem estatística com Poisson e Monte Carlo, e organização de repositório profissional.
 
 ---
 
-## Como Executar Localmente
+## Stack utilizada
 
-```bash
-pip install -r requirements.txt
-
-# Fase 1 — coleta e índice de força
-python main_fase1.py
-
-# Fase 2 — modelo preditivo
-python main_fase2.py
-
-# Dashboard
-streamlit run dashboard/app.py
-```
-
-> ⚠️ Necessário criar conta gratuita em football-data.org e API-Football (RapidAPI) e configurar as chaves em `.env`.
-> Consulte `.env.example` para o formato esperado.
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![Pandas](https://img.shields.io/badge/Pandas-2.x-green)
+![SciPy](https://img.shields.io/badge/SciPy-Poisson-orange)
+![Streamlit](https://img.shields.io/badge/Streamlit-planejado-red)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-planejado-black)
 
 ---
 
-## Sobre
+## Projeto substituto
 
-Projeto desenvolvido pela **Lufi Data Consulting** como parte do portfólio de transição de carreira para dados.
-
-Engenheiro de Produção com 10 anos de experiência em operações, processos e análise administrativa — agora usando dados como ferramenta de decisão de negócio.
-
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/filholuiz)
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/DataLufi)
+Os objetivos técnicos deste projeto — Streamlit público, GitHub Actions e dado dinâmico — foram absorvidos pelo **[Projeto Prisma](https://github.com/DataLufi)**, que entrega a mesma demonstração de stack com narrativa de negócio mais robusta e sem dependência de API externa instável.
 
 ---
 
-*Previsões geradas por modelo estatístico — não constituem certeza de resultado.*
-*Dados coletados de fontes públicas: FIFA, football-data.org, API-Football.*
+[![GitHub](https://img.shields.io/badge/GitHub-DataLufi-black?logo=github)](https://github.com/DataLufi)
+
+*Projeto de portfólio — transição de carreira para a área de dados.*
+*Arquivado em maio/2026 após decisão estratégica de consolidação de stack.*
